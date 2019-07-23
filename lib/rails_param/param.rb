@@ -155,7 +155,7 @@ module RailsParam
                                                                                                     when Range
                                                                                                       value.include?(param)
                                                                                                     else
-                                                                                                      Array(value).include?(param)
+                                                                                                      Array.wrap(value).include?(param)
                                                                                                   end
           when :min
             raise InvalidParameterError, "Parameter #{param_name} cannot be less than #{value}" unless param.nil? || value <= param
