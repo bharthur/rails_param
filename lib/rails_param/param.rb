@@ -25,7 +25,7 @@ module RailsParam
       return unless params.include?(name) || check_param_presence?(options[:default]) || options[:required]
 
       begin
-        params[name] = coerce(params[name], type, options)
+        params[name] = coerce(name, params[name], type, options)
 
         # set default
         if options[:default].respond_to?(:call)
@@ -95,12 +95,12 @@ module RailsParam
       yield(controller, index)
     end
 
-    def coerce(param, type, options = {})
+    def coerce(param_name, param, type, options = {})
       begin
         return nil if param.nil?
         return param if (param.is_a?(type) rescue false)
         if (param.is_a?(Array) && type != Array) || ((param.is_a?(Hash) || param.is_a?(ActionController::Parameters)) && type != Hash)
-          raise InvalidParameterError, "'#{param}' is not a valid #{type}"
+          raise InvalidParameterError, "Parameter #{param_name} '#{param}' is not a valid #{type}"
         end
         return param if (param.is_a?(ActionController::Parameters) && type == Hash rescue false)
         return Integer(param) if type == Integer
@@ -127,7 +127,7 @@ module RailsParam
         end
         return nil
       rescue ArgumentError
-        raise InvalidParameterError, "'#{param}' is not a valid #{type}"
+        raise InvalidParameterError, "Parameter #{param_name} '#{param}' is not a valid #{type}"
       end
     end
 
@@ -165,6 +165,8 @@ module RailsParam
             raise InvalidParameterError, "Parameter #{param_name} cannot have length less than #{value}" unless param.nil? || value <= param.length
           when :max_length
             raise InvalidParameterError, "Parameter #{param_name} cannot have length greater than #{value}" unless param.nil? || value >= param.length
+          when :custom
+            raise InvalidParameterError, "Parameter #{param_name} is not valid" unless value.to_proc.call(param)
         end
       end
     end
